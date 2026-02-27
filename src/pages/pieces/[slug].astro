@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const pieces = await getCollection('pieces', ({ data }) => data.published);
+  return pieces.map(piece => ({
+    params: { slug: piece.slug },
+    props: { piece },
+  }));
+}
+
+const { piece } = Astro.props;
+const { Content } = await piece.render();
+
+const formattedDate = piece.data.date.toLocaleDateString('en-GB', {
+  year: 'numeric', month: 'long', day: 'numeric'
+});
+---
+
+<BaseLayout
+  title={piece.data.title}
+  description={piece.data.description}
+>
+  <article>
+    <header>
+      <time datetime={piece.data.date.toISOString()}>{formattedDate}</time>
+      <h1>{piece.data.title}</h1>
+      <p class="description">{piece.data.description}</p>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  article header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  time {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+    letter-spacing: 0.05em;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0.5rem 0;
+  }
+
+  .description {
+    color: var(--fg-muted);
+    font-style: italic;
+    margin: 0;
+  }
+
+  .prose :global(p) { margin-bottom: 1.25rem; }
+  .prose :global(h2) { font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.75rem; }
+  .prose :global(h3) { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+  .prose :global(ul), .prose :global(ol) { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+  .prose :global(li) { margin-bottom: 0.4rem; }
+  .prose :global(blockquote) {
+    border-left: 3px solid var(--accent-amber);
+    padding-left: 1rem;
+    color: var(--fg-muted);
+    font-style: italic;
+    margin: 1.5rem 0;
+  }
+
+  .prose :global(.canvas-block) {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 2.5rem 0;
+    max-width: 900px;
+  }
+</style>
