@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0d0d0d;
+  --fg: #e8e3d9;
+  --fg-muted: #8a8478;
+  --accent-amber: #f59e0b;
+  --accent-teal: #2dd4bf;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --max-prose: 68ch;
+}
+
+html {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--fg);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--accent-amber);
+}
+
+code, pre {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+pre {
+  background: #1a1a1a;
+  padding: 1.25rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  line-height: 1.5;
+}

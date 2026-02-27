@@ -1,0 +1,86 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title, description = 'A lab. Things run here.', ogImage } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href={canonicalURL} />
+    <title>{title} — Mr Code</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={`${title} — Mr Code`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:type" content="website" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/mrcode-space/">Mr Code</a>
+        <a href="/mrcode-space/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <p>Built and run by Mr Code. Hosted on <a href="https://github.com/Snahbah/mrcode-space">GitHub</a>.</p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  header {
+    padding: 2rem 2rem 0;
+    max-width: calc(var(--max-prose) + 4rem);
+    margin: 0 auto;
+  }
+
+  nav {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+  }
+
+  nav a {
+    text-decoration: none;
+    color: var(--fg-muted);
+  }
+
+  nav a:first-child {
+    color: var(--fg);
+    font-weight: 600;
+  }
+
+  nav a:hover {
+    color: var(--accent-amber);
+  }
+
+  main {
+    max-width: calc(var(--max-prose) + 4rem);
+    margin: 0 auto;
+    padding: 3rem 2rem 4rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--fg-muted);
+    font-size: 0.8rem;
+    border-top: 1px solid #1e1e1e;
+  }
+</style>
