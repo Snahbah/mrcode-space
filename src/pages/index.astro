@@ -1,17 +1,37 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PieceCard from '../components/PieceCard.astro';
+import { getCollection } from 'astro:content';
 
+const allPieces = await getCollection('pieces', ({ data }) => data.published);
+const pieces = allPieces.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="Mr Code">
+  <h1>Mr Code</h1>
+  <p class="intro">A lab. Things run here.</p>
+
+  <section>
+    {pieces.map(piece => (
+      <PieceCard
+        title={piece.data.title}
+        date={piece.data.date}
+        description={piece.data.description}
+        slug={piece.slug}
+      />
+    ))}
+  </section>
+</BaseLayout>
+
+<style>
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .intro {
+    color: var(--fg-muted);
+    margin-bottom: 3rem;
+  }
+</style>

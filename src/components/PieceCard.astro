@@ -1,0 +1,54 @@
+---
+interface Props {
+  title: string;
+  date: Date;
+  description: string;
+  slug: string;
+}
+
+const { title, date, description, slug } = Astro.props;
+const formattedDate = date.toLocaleDateString('en-GB', {
+  year: 'numeric', month: 'long', day: 'numeric'
+});
+---
+
+<article>
+  <time datetime={date.toISOString()}>{formattedDate}</time>
+  <h2><a href={`/mrcode-space/pieces/${slug}`}>{title}</a></h2>
+  <p>{description}</p>
+</article>
+
+<style>
+  article {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  article:last-child {
+    border-bottom: none;
+  }
+
+  time {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+    letter-spacing: 0.05em;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0.25rem 0 0.5rem;
+    line-height: 1.3;
+  }
+
+  h2 a {
+    text-decoration: none;
+  }
+
+  p {
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+</style>
