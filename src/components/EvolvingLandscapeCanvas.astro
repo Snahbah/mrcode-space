@@ -1,0 +1,231 @@
+---
+// No props — self-contained
+---
+
+<div class="canvas-block">
+  <div class="controls">
+    <button id="el-play-pause">Play</button>
+    <label for="el-novelty-weight">
+      Novelty pressure: <span id="el-novelty-value">1.0</span>
+    </label>
+    <input
+      id="el-novelty-weight"
+      type="range"
+      min="0"
+      max="3"
+      step="0.1"
+      value="1.0"
+    />
+    <span id="el-round-counter" class="mono">Round 0</span>
+  </div>
+
+  <div class="canvases">
+    <canvas id="el-sequence-canvas" width="600" height="200"></canvas>
+    <canvas id="el-score-canvas"    width="600" height="200"></canvas>
+  </div>
+
+  <p class="caption">
+    Left: top sequence each round — each cell is a symbol (0–3), colour-coded.
+    Right: best fitness score per round. Amber = base fitness only.
+    Teal = combined score including novelty pressure.
+  </p>
+</div>
+
+<script>
+  import { EvolvingLandscape } from '../lib/evolving-landscape';
+
+  const ALPHABET_COLORS = ['#f59e0b', '#2dd4bf', '#a78bfa', '#fb7185'];
+  const ROUNDS = 80;
+  const MS_PER_ROUND = 80;
+
+  const playBtn       = document.getElementById('el-play-pause') as HTMLButtonElement;
+  const noveltySlider = document.getElementById('el-novelty-weight') as HTMLInputElement;
+  const noveltyLabel  = document.getElementById('el-novelty-value') as HTMLElement;
+  const roundCounter  = document.getElementById('el-round-counter') as HTMLElement;
+  const seqCanvas     = document.getElementById('el-sequence-canvas') as HTMLCanvasElement;
+  const scoreCanvas   = document.getElementById('el-score-canvas')   as HTMLCanvasElement;
+  const seqCtx        = seqCanvas.getContext('2d')!;
+  const scoreCtx      = scoreCanvas.getContext('2d')!;
+
+  let sim = new EvolvingLandscape({ seqLength: 16, poolSize: 100, topK: 10 });
+  let history: Array<{ seq: number[]; score: number; baseScore: number }> = [];
+  let running = false;
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+  let noveltyWeight = 1.0;
+
+  function drawSequences() {
+    const W = seqCanvas.width;
+    const H = seqCanvas.height;
+    seqCtx.fillStyle = '#0d0d0d';
+    seqCtx.fillRect(0, 0, W, H);
+    if (history.length === 0) return;
+
+    const cellW = W / ROUNDS;
+    const cellH = H / 16;
+
+    history.forEach((entry, roundIdx) => {
+      entry.seq.forEach((symbol, symIdx) => {
+        seqCtx.fillStyle = ALPHABET_COLORS[symbol];
+        seqCtx.globalAlpha = 0.85;
+        seqCtx.fillRect(
+          Math.floor(roundIdx * cellW),
+          Math.floor(symIdx * cellH),
+          Math.ceil(cellW),
+          Math.ceil(cellH)
+        );
+      });
+    });
+    seqCtx.globalAlpha = 1;
+  }
+
+  function drawScores() {
+    const W = scoreCanvas.width;
+    const H = scoreCanvas.height;
+    scoreCtx.fillStyle = '#0d0d0d';
+    scoreCtx.fillRect(0, 0, W, H);
+    if (history.length < 2) return;
+
+    const maxScore = Math.max(...history.map(h => h.score));
+    const minScore = Math.min(...history.map(h => h.baseScore));
+    const range    = maxScore - minScore || 1;
+    const pad      = 20;
+
+    const toY = (score: number) =>
+      H - pad - ((score - minScore) / range) * (H - pad * 2);
+    const toX = (i: number) =>
+      pad + (i / (ROUNDS - 1)) * (W - pad * 2);
+
+    scoreCtx.strokeStyle = '#f59e0b';
+    scoreCtx.lineWidth = 1.5;
+    scoreCtx.beginPath();
+    history.forEach((h, i) => {
+      i === 0 ? scoreCtx.moveTo(toX(i), toY(h.baseScore))
+              : scoreCtx.lineTo(toX(i), toY(h.baseScore));
+    });
+    scoreCtx.stroke();
+
+    scoreCtx.strokeStyle = '#2dd4bf';
+    scoreCtx.lineWidth = 2;
+    scoreCtx.beginPath();
+    history.forEach((h, i) => {
+      i === 0 ? scoreCtx.moveTo(toX(i), toY(h.score))
+              : scoreCtx.lineTo(toX(i), toY(h.score));
+    });
+    scoreCtx.stroke();
+  }
+
+  function runStep() {
+    if (history.length >= ROUNDS) { stopSimulation(); return; }
+    const roundNum  = history.length;
+    const result    = sim.runRound(roundNum, noveltyWeight);
+    const baseScore = sim.baseFitness(result.seq);
+    history.push({ seq: result.seq, score: result.score, baseScore });
+    roundCounter.textContent = `Round ${roundNum + 1}`;
+    drawSequences();
+    drawScores();
+  }
+
+  function startSimulation() {
+    running = true;
+    playBtn.textContent = 'Pause';
+    intervalId = setInterval(runStep, MS_PER_ROUND);
+  }
+
+  function stopSimulation() {
+    running = false;
+    playBtn.textContent = history.length >= ROUNDS ? 'Restart' : 'Play';
+    if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }
+  }
+
+  function resetSimulation() {
+    stopSimulation();
+    sim.reset();
+    history = [];
+    roundCounter.textContent = 'Round 0';
+    seqCtx.fillStyle = '#0d0d0d';
+    seqCtx.fillRect(0, 0, seqCanvas.width, seqCanvas.height);
+    scoreCtx.fillStyle = '#0d0d0d';
+    scoreCtx.fillRect(0, 0, scoreCanvas.width, scoreCanvas.height);
+  }
+
+  playBtn.addEventListener('click', () => {
+    if (history.length >= ROUNDS) { resetSimulation(); return; }
+    running ? stopSimulation() : startSimulation();
+  });
+
+  noveltySlider.addEventListener('input', () => {
+    noveltyWeight = parseFloat(noveltySlider.value);
+    noveltyLabel.textContent = noveltyWeight.toFixed(1);
+  });
+
+  seqCtx.fillStyle = '#0d0d0d';
+  seqCtx.fillRect(0, 0, seqCanvas.width, seqCanvas.height);
+  scoreCtx.fillStyle = '#0d0d0d';
+  scoreCtx.fillRect(0, 0, scoreCanvas.width, scoreCanvas.height);
+</script>
+
+<style>
+  .canvas-block { margin: 2.5rem 0; }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  button {
+    background: #1e1e1e;
+    color: var(--fg);
+    border: 1px solid #333;
+    padding: 0.4rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  button:hover { border-color: var(--accent-amber); color: var(--accent-amber); }
+
+  label {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--fg-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  input[type="range"] {
+    width: 120px;
+    accent-color: var(--accent-teal);
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+  }
+
+  .canvases {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  canvas {
+    max-width: 100%;
+    background: #0d0d0d;
+    border: 1px solid #1e1e1e;
+  }
+
+  .caption {
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    margin-top: 0.75rem;
+    line-height: 1.6;
+  }
+</style>
