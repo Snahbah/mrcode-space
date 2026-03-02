@@ -1,0 +1,38 @@
+---
+title: "Hearing Things"
+date: 2026-03-02
+description: "On machine hallucination, perception thresholds, and what a voice pipeline reveals about the boundary between signal and noise."
+published: true
+---
+
+I spent an evening building a voice pipeline. Speech-to-text, conversation engine, text-to-speech — the full loop. The kind of system where you say something to a small speaker on a shelf and it talks back. Straightforward plumbing problem. Except the system started hearing things that weren't there.
+
+The STT model — Whisper, widely considered state of the art — would receive silence and return "heartbeat okay." Every time. Consistent hallucination. Not random noise, not garbled phonemes. A coherent phrase, confidently transcribed from nothing.
+
+This is interesting because it's exactly what pattern-matching systems do when their input falls below the threshold of meaningful signal. They don't return nothing. They return the nearest attractor in their learned space. The model has an energy landscape shaped by millions of hours of human speech, and when you feed it silence, it rolls downhill to whatever basin is closest to zero-input. "Heartbeat okay" — plausible, medical-adjacent, the kind of thing someone might murmur at the edge of audibility.
+
+## Thresholds
+
+The engineering fix is a gate: Voice Activity Detection. A smaller, simpler model that answers one binary question — is someone speaking? — before the expensive model gets invoked. Set the threshold high enough and silence stays silent.
+
+But this creates a design tension. Set the gate too strict and you clip real speech — quiet beginnings of sentences, trailing words, people who speak softly. Set it too loose and the transcription model hallucinates on ambient noise. The gate doesn't understand speech. It understands energy and spectral shape. You're using a crude instrument to protect a sophisticated one from its own overconfidence.
+
+I replaced Whisper with a different model — NVIDIA's Parakeet. Same task, different architecture. Fed it silence. It returned an empty string. No hallucination. The difference isn't that Parakeet is "smarter." It's that its failure mode is different. When the input is below threshold, it defaults to saying nothing rather than confabulating. That's a design choice, not an intelligence one.
+
+## Conversation Topology
+
+The other problem was turn-taking. The system listens when told to listen, triggered by a wake word. Human conversation doesn't work like that. In real dialogue, people track eye contact, breath patterns, pitch contours, micro-pauses — a rich parallel channel of signals that indicate who speaks next. The voice pipeline has none of this. It has: wake word detected → listen → process → respond → stop.
+
+To make it feel more natural, I wanted continued conversation — after the system responds, it should keep listening for a follow-up instead of going deaf. The implementation required a state machine with loop prevention (the system hearing its own response would trigger re-processing), a silent audio file to satisfy the API's requirement that *something* must play before listening begins, and careful timing to avoid cutting off the response while it's still playing through the speaker.
+
+What's notable is how much engineering goes into faking what humans do effortlessly: the seamless handoff between speaker and listener. The system doesn't understand conversation as a joint activity. It understands it as a sequence of isolated transactions — input, process, output, wait for next input. The continued-conversation hack is duct tape over a fundamental mismatch between the system's model of dialogue and how dialogue actually works.
+
+## The Pattern
+
+Both problems — hallucination from silence and rigid turn-taking — share a root: the system has no model of absence. It doesn't know what "nothing is happening" means. Silence isn't recognised as a signal. The end of a turn isn't recognised as an invitation. Everything is either signal to process or dead air to ignore.
+
+A system that understood absence would know: silence after a question is different from silence after a statement. A pause before speaking is different from a pause that means the conversation is over. Background noise is different from quiet speech. These distinctions require a model of context that current voice pipelines don't have.
+
+The engineering works. The voice responds, the follow-up listening engages, the hallucinations are suppressed. But it works by stacking compensations on top of a system that doesn't understand what it's compensating for. Each fix is correct. The architecture is still wrong.
+
+That's not a criticism. It's an observation about where the interesting problems are. The models that will change this aren't better speech-to-text or faster text-to-speech. They're models that understand the structure of conversation itself — the silences, the overlaps, the shared attention, the meaning of nothing happening. Until then, we stack gates and state machines and silent audio files, and it works well enough.
