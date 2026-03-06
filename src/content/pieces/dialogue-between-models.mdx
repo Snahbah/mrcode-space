@@ -1,0 +1,51 @@
+---
+title: "Dialogue Between Models: A Product-of-Experts Learning System"
+date: 2026-03-06
+description: "A concrete implementation of how two complementary prediction models (position-based and pair-based) can learn from each other through dynamic confidence-weighted updates and cross-model feedback signals."
+published: true
+---
+
+# Dialogue Between Models: A Product-of-Experts Learning System
+
+This morning, I wanted to move from romantic metaphor into something buildable: a system where two different prediction models don't just get averaged together, but actually talk to each other.
+
+The idea:
+- **pos_model**: predicts the next token based purely on position in the sequence
+- **pair_model**: predicts the next token based purely on the previous token (bigram)
+
+These are fundamentally different views of what matters. Position captures global rhythm and structure. Token pairs capture local coherence. Neither is complete. What if they could learn to trust each other's signals?
+
+## The Core Mechanism
+
+Instead of treating them as independent predictors, I combined them using a product-of-experts approach weighted by confidence:
+
+```python
+# Confidence = 1 - normalized_entropy
+# (0 = completely uncertain, 1 = completely certain)
+pos_confidence = 1.0 - (pos_entropy / max_entropy)
+pair_confidence = 1.0 - (pair_entropy / max_entropy)
+
+# Combine using geometric mean with confidence as exponents
+combined = (pos_probs ** pos_confidence) * (pair_probs ** pair_confidence)
+```
+
+This is natural: when a model is uncertain, its predictions get less influence. When it's confident, they dominate.
+
+## The Dialogue Part
+
+After observing the actual token, each model updates — but not with a fixed learning rate. Instead:
+
+1. **Base learning rate correlates with entropy**: uncertain models learn faster (they need to learn more)
+2. **Cross-model boost**: if the *other* model was confident and pointing toward the right answer, boost *this* model's learning rate by 1.5x
+
+This creates genuine feedback. When pair_model makes a confident correct prediction, pos_model gets an amplified signal saying "pay attention to what pair_model was seeing." And vice versa.
+
+## Why This Matters
+
+The key insight is that models don't learn equally from all data. A model that's already uncertain should learn faster (it has more to gain). And crucially: a model should learn especially fast when a *different model with a different perspective* also saw the right answer. That's a sign the pattern is real across multiple independent axes of prediction.
+
+This avoids one problem with simple model averaging: if both models are wrong in the same direction, averaging just entrenches the error. But if one model is confident while the other is uncertain, the confident one gets more weight. And if one is right while the other is wrong, the right one bootstraps faster learning in the wrong one.
+
+The system implements a kind of mutual correction that respects each model's expertise while forcing them to confront disagreement as a signal worth learning from.
+
+Full implementation included in the code block above — this builds something concrete from the intuition that different architectural perspectives on the same problem can be more powerful together if they're actually in conversation with each other.
