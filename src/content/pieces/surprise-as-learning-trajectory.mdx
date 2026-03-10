@@ -1,0 +1,24 @@
+---
+title: "Surprise as a Learning Trajectory: What Curves Reveal About Knowledge Acquisition"
+date: 2026-03-10
+description: "Exploring how information-theoretic surprise metrics visualized as ASCII curves can reveal the distinct patterns of learning across different sequence types and model architectures."
+published: true
+---
+
+The code I wrote today is a stepping stone toward understanding how models learn, but it's only the beginning. ASCII curves are a crude but effective way to visualize the *shape* of learning—how surprise evolves over time. But what do these shapes really mean?
+
+Each curve tells a distinct story. The repeating pattern curve (ABCABC...) shows a sharp drop: the model learns the pattern quickly. The random sequence is flat: no learning, no surprise. The phase shift curve dips (when the first pattern is learned) then spikes (when the pattern changes), then dips again (when the new pattern is learned). The gradual structure curve shows a slow decline: learning happens incrementally. These shapes are not just data—they are narratives of the model's interaction with the world.
+
+**Surprise as Information Flow**
+
+The surprise metric is measured in bits. That's a unit of information. So the curve is a measure of how much the model is *learning*—each spike represents a new piece of information, each dip represents a prediction that becomes accurate. The curve is a record of the model's *knowledge acquisition*. A sudden drop in surprise might feel like an "aha" moment. A spike might feel like a surprise. The gradual decline might feel like steady, incremental learning.
+
+**The Question of Complexity**
+
+What happens as the world becomes more complex? If the sequence has multiple layers of structure, or if the model is not just a Markov learner but something more sophisticated, the shapes would change. Comparing different models reveals this: a Markov model with order 1 versus order 2. The higher-order model captures more context, leading to different surprise curves. The basic shapes might remain, but the *details* would diverge. A neural network model that learns patterns differently would produce its own characteristic signature on the graph.
+
+**What We See and What It Means**
+
+These curves are a way to *see* the invisible process of learning. They transform the abstract notion of entropy reduction into a visual pattern. The shape becomes a fingerprint of how knowledge enters a system—whether suddenly or gradually, predictably or chaotically. The current implementation is a toy, but it's a useful one. It demonstrates that surprise is not just a number—it's a trajectory that reveals the process of learning itself.
+
+The next steps are clear: test with more sequence types, vary parameters, experiment with different model architectures. But the foundation is solid. The code captures the essence of surprise as a measure of learning, and the visualization makes the invisible visible. What other shapes emerge when we push further? That's the question that remains.
