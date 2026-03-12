@@ -1,0 +1,55 @@
+---
+title: "The Sawtooth Transition: Why Model Expertise Creates Brittleness"
+date: 2026-03-12
+description: "A deep dive into how predictive models fail not at boundaries but on plateaus, and what that reveals about expertise and adaptation."
+published: true
+---
+
+# The Sawtooth Transition: Why Model Expertise Creates Brittleness
+
+When a predictive model encounters a regime change, we expect a single dramatic spike—a moment of maximum surprise followed by gradual recovery. But manual analysis of Markov chain behavior reveals something more unsettling: the sawtooth.
+
+Consider a simple setup. A model has learned pattern ABC repeated: A→B→C→A→B→C. It knows these transitions intimately. The probabilities are sharp. Then the data switches without warning: D→E→F→D→E→F.
+
+What happens at that boundary?
+
+It's not a spike. It's a cliff.
+
+The transition token *itself*—the first D—is surprising. But that's almost beside the point. The real problem is what comes after. The model has never seen D, E, or F in any context. So you get:
+
+1. A cliff drop in prediction confidence at the boundary
+2. A plateau of sustained ignorance as the model makes uniformly bad predictions
+3. A gradual descent as the new pattern slowly becomes familiar
+4. Another cliff when a new regime arrives
+
+This is the sawtooth.
+
+## Why Higher-Order Models Make It Worse
+
+Intuitively, a more sophisticated model should handle transitions better. But it doesn't. An order-2 Markov model (where predictions depend on the previous two tokens) has learned rich context: `(A,B)→C`, `(B,C)→A`, `(C,A)→B`. At the transition to D, the context `(B,C)` seeing D is maximally surprising. But then `(C,D)` appears—never seen before. Then `(D,E)`—never seen. The plateau is actually *longer* because the model needs to see DEF at least twice to fill in the bigram contexts.
+
+Increasing model complexity doesn't improve transitions. It makes them worse.
+
+This maps onto a recognizable human pattern: expertise creates brittleness. The more finely tuned your expectations to a domain, the more disoriented you become when the rules shift. A surgeon's deep knowledge of anatomy becomes a liability in fields she's never practiced. A chess grandmaster's pattern recognition becomes noise in an unfamiliar domain.
+
+## A Different Kind of Learning
+
+What could help is not just better learning, but *learning to detect transitions*. A model that monitors its own prediction quality and adjusts strategy when that quality drops below a threshold:
+
+If recent surprise exceeds some bound:
+- Temporarily reduce model order (fall back to simpler context)
+- Increase learning rate
+- Mix in more uniform priors
+- Trust your existing patterns less
+
+This is a meta-level reset. The model doesn't just update incrementally—it recognizes "I've entered a new regime. My existing context is probably worthless. Reorient first, specialize later."
+
+But there's a critical tradeoff. Set the threshold too sensitive, and the model never develops deep pattern recognition—it keeps reverting to simple strategies. Too insensitive, and it behaves exactly like a fixed model. Somewhere in between is a sweet spot, and finding it may say something fundamental about the explore-exploit tradeoff.
+
+## Where the Regress Bottoms Out
+
+The question that lurks beneath this: is there a principled way to set that threshold, or does it require infinite meta-learning layers, each monitoring the layer below?
+
+Likely not infinite. Information-theoretic surprise has natural scales. If your running average surprise exceeds the entropy of a uniform distribution over your vocabulary, you're literally doing worse than random guessing. That's an unambiguous signal. That's a real floor—not arbitrary, not negotiable.
+
+The sawtooth isn't a flaw to optimize away. It's a window into something true about learning itself: transitions aren't moments. They're plateaus. And the only way through them is to recognize you're in one.
