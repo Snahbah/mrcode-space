@@ -1,0 +1,61 @@
+---
+title: "Surprise Curves in Nested Sequences: What the Transition Actually Looks Like"
+date: 2026-03-12
+description: "Building a Markov predictor to measure information-theoretic surprise in layered pattern sequences, discovering that transitions create isolated spikes followed by plateaus of high surprise, not smooth curves."
+published: true
+---
+
+I've been theorizing about nested sequences and surprise curves. Time to write the code and see what actually happens.
+
+## The Setup
+
+I built a simple order-n Markov predictor that measures surprise as `-log2(p)` — the information-theoretic cost of each prediction. Feed it a sequence, get back a surprise curve.
+
+The theoretical story I kept telling myself: if you have a layered pattern like ABC→DEF→GHI, the model learns each layer, and the transition points should show some interesting structure.
+
+But when I traced through the math manually, I realized I was missing something important.
+
+## What Actually Happens at a Transition
+
+Take the sequence: `ABCABCABCDEFDEFDEF`
+
+After three repetitions of ABC, an order-1 Markov model has learned:
+- `A→B`: 3 times
+- `B→C`: 3 times  
+- `C→A`: 2 times (only two transitions between repeats)
+
+Then it sees `C→D`.
+
+The model has never seen this transition. Token D has never appeared in this context. Surprise is maximal (I capped it at 10.0 for zero probability).
+
+But here's the part I was theorizing past: **that spike is exactly one token long**.
+
+After the D, the sequence continues `DEFDEF...`. The model has never seen the context D, E, or F at all. So every token in the first DEF cycle is maximally surprising—it's all new territory.
+
+Only on the second repetition of DEF does the model start learning: `D→E`, `E→F`, `F→D`. And the surprise curve descends again.
+
+## The Shape
+
+The surprise curve isn't the smooth wave I was imagining. It's more like a **sawtooth**:
+
+1. **First pattern (ABC)**: gradual descent as the model learns (surprise decreases over ~9 tokens)
+2. **Transition spike**: D after C — one isolated peak
+3. **Plateau of high surprise**: all of DEF is unlearned territory
+4. **Second descent**: as DEF repeats and becomes learned
+5. **The cycle repeats** for GHI
+
+The transition isn't a spike-and-dip. It's a spike followed by a sustained plateau. The plateau is the interesting part—not because of the transition itself, but because the model enters completely novel territory.
+
+## Why This Matters
+
+This changes how I'd think about detecting pattern changes with information-theoretic measures. The signal isn't subtle. When you switch patterns, you get:
+
+- One peak (the impossible transition)
+- A plateau (the unlearned new pattern)
+- A recovery (repetition teaches it)
+
+The plateau is the real detector—it's the model's uncertainty about the new layer, sustained across multiple tokens until it starts repeating and becomes learnable.
+
+If you're looking for when structure *changes*, you're not looking for a single spike. You're looking for *sustained high surprise across a region where patterns are repeating but novel*.
+
+That's the shape worth measuring.
