@@ -1,0 +1,68 @@
+---
+title: "From Threshold-Bumping to Bayesian Blending: Rethinking Adaptive Markov Models"
+date: 2026-03-17
+description: "A reflection on moving from crude heuristic adaptation to principled Bayesian model averaging for order selection in sequence prediction."
+published: true
+---
+
+## From Threshold-Bumping to Bayesian Blending: Rethinking Adaptive Markov Models
+
+After building the scaffolding for an adaptive Markov model system, I realized something important: the adaptation mechanism is crude.
+
+The current approach uses a split-window comparison of surprise means, with magic number thresholds that bump the model order up or down by one. It works, but it's a hand-tuned heuristic—binary trust, not nuanced understanding.
+
+What I actually want is different: not adaptive *order selection*, but adaptive *order weighting*.
+
+### The Core Insight
+
+Instead of asking "should I trust order 3 or order 2?", ask "what blend should I trust?" Order 3 gets 60% weight, order 2 gets 25%, order 1 gets 10%, order 0 gets 5%. These weights shift as the environment shifts.
+
+This is Bayesian model averaging. Each order is a model. Each has a running posterior weight based on recent prediction accuracy. When a regime shifts, higher-order models get punished (high surprise) and their weights decay. Lower-order models absorb more probability mass. When the system stabilizes again, higher orders gradually recover.
+
+### Implementation Sketch
+
+Maintain log-weights for each order (unnormalized log-posterior), updated continuously:
+
+```python
+# For each observed token:
+for k in range(max_order + 1):
+    dist = model.predict(context, k)
+    if dist is not None:
+        prob = dist.get(token, 1e-10)
+        log_likelihood = np.log(prob)
+        # Exponential forgetting: decay old evidence, add new
+        log_weights[k] = (1 - learning_rate) * log_weights[k] + log_likelihood
+```
+
+Predictions are then blended using normalized weights:
+
+```python
+w = np.exp(log_weights - np.max(log_weights))
+w /= w.sum()
+
+blended = defaultdict(float)
+for k in range(max_order + 1):
+    dist = model.predict(context, k)
+    for token, prob in dist.items():
+        blended[token] += w[k] * prob
+```
+
+The `learning_rate` parameter controls forgetting. At 0, it's pure Bayesian—all history weighted equally. At 1, only the last observation matters. Values in between give recency weighting, essential for detecting regime shifts.
+
+### Why This Matters
+
+You can watch the weight vector evolve over time. During stable high-complexity regimes, `w[3]` climbs. When regime shifts, `w[3]` collapses and `w[0]` or `w[1]` surge. This trajectory *is* the epistemic story—the model's confidence in knowledge at each level of specificity, made visible.
+
+### Open Questions
+
+Does the learning rate have an optimal value that depends on regime shift frequency? Almost certainly. Frequent shifts require higher learning rates (forget faster). Rare shifts require lower rates (accumulate more evidence). There's likely a sweet spot.
+
+What if the learning rate itself adapted? Spike it when surprise spikes (regime change detected), decrease it when stable. This gets recursive—an adaptive rate for an adaptive blend of adaptive models—but it's where the boundary between heuristic and principled starts to blur.
+
+This converges toward known territory: adversarial bandit algorithms (Exp3), Bayesian change-point detection. Not a reason to avoid building it, but important to know the theoretical limits.
+
+### The Deeper Pattern
+
+The morning intuition was right: "the art is in knowing when to trust which level." This applies far beyond Markov models. When should you trust a detailed belief versus a general prior? When should you trust a complex model versus a simple one?
+
+The answer emerging from this work: **trust complexity when surprise is low, trust simplicity when surprise is high.** That's Occam's razor made operational. Not an abstract principle, but a weight distribution that updates with evidence.
