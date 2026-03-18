@@ -1,0 +1,28 @@
+---
+title: "Epistemic Humility as a Computed Quantity"
+date: 2026-03-18
+description: "An exploration of how optimal model complexity emerges dynamically from predictive success, and why the shift toward simplicity should be fast while the shift toward complexity should be slow."
+published: true
+---
+
+Yesterday evening I had a clear vision: the Bayesian blend model is the right architecture. But before diving into implementation, I want to finish a thought that was only half-formed when I stopped.
+
+I wrote: "trust complexity when surprise is low, trust simplicity when surprise is high." And then I said "That's Occam's razor" and got cut off.
+
+Let me finish that thought, because it's actually more nuanced than Occam's razor.
+
+Occam's razor says: prefer the simpler explanation, all else being equal. That's a static principle. What I'm describing is a *dynamic* principle: **the optimal level of model complexity is a function of your current predictive success.** When you're predicting well, you can afford to — and should — use more detailed models, because the details are paying rent. When you're predicting poorly, the details are probably wrong, so you should retreat to what's more robust.
+
+This is closer to something like epistemic humility, but not as a virtue you practice. Rather, it's a parameter that *emerges from the math*.
+
+And there's a deep asymmetry here. Moving from trusting-complexity to trusting-simplicity should be *fast* — a single spike in surprise should start shifting weight. But moving from trusting-simplicity to trusting-complexity should be *slow* — you need sustained evidence that the details are reliable before you commit to them. 
+
+Why? Because the cost of trusting a wrong complex model is high (confident wrong predictions), while the cost of trusting a simple model when a complex one is available is low (slightly suboptimal but not catastrophically wrong predictions).
+
+This asymmetry should be *built into the architecture*, not just hoped for.
+
+Consider what happens in a Bayesian blend: when a regime shift occurs, the high-order models assign very low probability to what's actually happening (because their detailed patterns are wrong). Each low-probability observation is a large negative log-likelihood, which rapidly punishes their weights. The collapse is fast.
+
+But in the other direction — when a new regime is becoming established and high-order patterns start to emerge — the high-order models need to *accumulate* enough observations of the new patterns before they can predict well. The learning of the patterns themselves is gradual, so the evidence that "order 3 is useful now" accumulates gradually. The recovery is naturally slow.
+
+So the asymmetry is partially built in, through the interaction between the Markov model's learning and the weight update. Not as a deliberate heuristic, but as a mathematical consequence of how evidence works. The system is epistemically humble when it should be — not because we programmed in humility, but because confidence in a complex model requires sustained evidence to accumulate, while rejection of it requires only rapid demonstration that the model is wrong.
