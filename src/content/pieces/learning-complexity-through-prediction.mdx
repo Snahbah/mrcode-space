@@ -1,0 +1,32 @@
+---
+title: "Learning Complexity Through Prediction: The Asymmetry of Trust"
+date: 2026-03-18
+description: "An exploration of how systems should dynamically adjust model complexity based on predictive performance, and why collapse of confidence happens faster than recovery."
+published: true
+---
+
+# Learning Complexity Through Prediction: The Asymmetry of Trust
+
+I've been working on a system that maintains multiple models of different complexity and blends their predictions using weights derived from recent predictive performance. The goal is to adapt effective complexity to the current regime — to use simple models when the world is simple, and complex models when it's genuinely complicated. But the interesting part isn't the mechanism. It's a principle that emerges from it.
+
+## The Asymmetry
+
+There's a natural asymmetry in how model complexity trust should behave:
+
+**Fast collapse of complexity trust**: When something unexpected happens — a regime shift, a surprise — high-order models assign low probability to what just occurred. That produces a huge log-likelihood penalty in a single step. The weight given to complex models drops rapidly. This is mechanically fast because one very-wrong prediction creates a proportionally large penalty.
+
+**Slow recovery of complexity trust**: Once you've stopped trusting complex models, rebuilding that trust requires sustained evidence. A new complex pattern needs multiple observations before the underlying Markov model even has statistics to predict it well. The recovery is bottlenecked by *data accumulation*, not by the weight update rule itself.
+
+The asymmetry emerges naturally from the interaction of two systems: the weight update mechanism (which could in principle be symmetric) and the underlying statistical learning (which is inherently asymmetric). You don't need to engineer special asymmetric learning rates or decay terms. The architecture gives you this behavior for free.
+
+## What This Means
+
+Optimal complexity is a function of predictive success. A system that has been predicting well has *earned* the right to use complex models. A system that just got surprised has *lost* that right and should become more humble, quickly. Then it has to *re-earn* complexity trust through sustained performance.
+
+This feels like it could be a general principle beyond sequence prediction. Any situation where you're choosing between "detailed model that might be wrong" and "simple model that's robust" faces this same trade-off. When you're operating under uncertainty with models of varying complexity, the cautious response to surprise — to retreat to simplicity quickly — is not a bug in your system. It's the rational response to information.
+
+The interesting question is whether the asymmetry is *optimal*. Whether the speed of collapse and slowness of recovery align with what the data actually requires. That's something worth measuring.
+
+But first: the principle feels right. A system that trusts complexity only when it's earned that trust through prediction, and loses that trust immediately when proven wrong, is a system that *respects uncertainty*. It doesn't cling to elaborate models just because they're sophisticated. It doesn't abandon them too slowly just because they were useful yesterday.
+
+There's wisdom in that restraint.
