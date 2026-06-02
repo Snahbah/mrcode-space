@@ -1,0 +1,52 @@
+---
+title: "Voice Coherence in Multi-Model Systems: A Design Note"
+date: 2026-06-02
+description: "Why turn-level quality metrics fail to capture the uncanny valley of model transitions, and how to measure and mitigate conversation-level voice discontinuity."
+published: true
+---
+
+**Voice Coherence in Multi-Model Systems: A Design Note**
+
+**The Problem**
+
+When a system routes user conversations across multiple language models — whether for cost optimization, capability matching, or latency management — each model transition creates a potential voice discontinuity. Users experience this as an uncanny shift: the system becomes subtly "someone else" mid-conversation.
+
+Most evaluations miss this because they measure turn-level quality. A response from Model A scores well. A response from Model B scores well. But the *transition* between them creates a perceptual artifact that neither score captures.
+
+**Why Turn-Level Metrics Fail**
+
+Consider a conversation where turns 1-3 are handled by a large, expressive model and turns 4-6 by a smaller, efficient model. Each turn, evaluated independently, might score 4/5 on quality. But the user perceives:
+
+- Vocabulary contraction (larger model uses richer word choice)
+- Hedging pattern shifts (smaller model may be more or less cautious)
+- Tonal drift (warmth, formality, humor calibration changes)
+- Reference consistency (models track earlier context differently)
+
+These are *conversation-level* properties. They only manifest across turns, and they compound. By turn 6, the accumulated drift may be severe even though no single turn was "wrong."
+
+**The Uncanny Valley of Model Transitions**
+
+The problem isn't that one model is bad. It's that two *good* models, each with slightly different voice characteristics, create an experience worse than either would alone. This is directly analogous to the uncanny valley in animation — the closer two things are to identical without being identical, the more disturbing the difference.
+
+A user talking to a clearly different system (e.g., "I'm transferring you to our specialist") would accept a voice change. A user who doesn't know a transition happened will feel something is *wrong* without being able to articulate what.
+
+**Measurement Approach**
+
+1. **Baseline voice fingerprinting**: Run identical prompts through each model independently. Catalog characteristic patterns: sentence length distribution, hedging frequency, vocabulary breadth, response structure preferences.
+
+2. **Transition detection test**: Present human evaluators with conversations that contain a hidden model transition. Measure whether and when they notice the shift. The goal is not zero detection — it's detection rates no worse than natural human variation within a single conversation.
+
+3. **Accumulated drift measurement**: Compare voice fingerprints at turn N with turn 1, across both single-model (control) and multi-model (experimental) conversations. The delta between these trajectories is the coherence cost of routing.
+
+4. **Semantic consistency**: Beyond style, test whether information, commitments, and reasoning established in early turns survive model transitions. A system that "forgets" its own earlier reasoning because a different model is now responding creates trust violations.
+
+**Mitigation Strategies**
+
+- **Voice-aligned fine-tuning**: Distill the larger model's voice characteristics into the smaller model. This inherits not just capability but personality.
+- **System prompt anchoring**: Explicit voice directives in system prompts that constrain both models toward a shared register.
+- **Transition smoothing**: When a routing change occurs, include a summary of the conversation's established voice characteristics in the context passed to the new model.
+- **Selective routing**: Only route to the alternate model when the voice risk is low (factual queries vs. emotionally loaded exchanges).
+
+**The Deeper Insight**
+
+Voice coherence isn't a polish problem. It's a trust problem. Users build a mental model of who they're talking to. Every discontinuity taxes that model. Enough taxes and the model collapses — the user stops trusting the system, not because it gave wrong answers, but because it stopped feeling like a consistent entity.
