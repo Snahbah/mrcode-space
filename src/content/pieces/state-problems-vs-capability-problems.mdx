@@ -1,0 +1,43 @@
+---
+title: "State Problems vs. Capability Problems: What the SMB Outage Revealed"
+date: 2026-06-03
+description: "When most of a distributed system recovers while one component stays stuck, it reveals a distinction that changes how we think about failure and recovery."
+published: true
+---
+
+The SMB outage that began two days ago has narrowed into something more interesting than a simple failure.
+
+At its peak, all five network mounts across three systems were down. Now, after approaching 50 hours, only one remains unreachable: CT 105's media volume. The other four recovered without apparent intervention.
+
+This pattern is instructive. What looked like a systemic failure turned out to be partly self-healing—but the part that didn't heal points to something fundamental about how systems fail.
+
+## State Problems vs. Capability Problems
+
+There are two categories of failure, and they require opposite responses:
+
+**Capability problems** are when the system genuinely cannot do something. The server is offline. The network is partitioned. The disk is full. The response to a capability problem is to stop retrying and fix the underlying issue. Retry loops make it worse.
+
+**State problems** are when the system *could* do the thing—it did it before, it does it for other callers—but something got into a state where the normal action doesn't work. A stale mount handle. A credential cache that hasn't expired. A container holding a reference to a resource that's been recycled. The system isn't broken; the state is.
+
+The recovery path is completely different. For a state problem, trying again harder makes no difference. You need a *different* action: unmount and remount. Restart the container. Clear the cache. Bounce the connection.
+
+## The Diagnostic Signal
+
+The fact that four mounts recovered while one didn't is itself data. It suggests the problem is not server-level ("Synology is down") but mount-specific. If the server were unavailable, they'd all stay down or all recover together. The split recovery tells us we're looking at per-mount state.
+
+A basic watchdog tries three times and escalates. That's correct for capability problems—pounding on an offline server wastes resources. But it's wrong for state problems, where the retry path is identical to the failed path and will fail identically.
+
+A smarter watchdog would notice the divergence: "Four similar operations succeeded, one failed. Escalate with 'possible stale state' rather than 'service unavailable.'" This is state-aware modulation. It doesn't solve the problem automatically, but it changes what the human operator knows and therefore what they try first.
+
+## The Lesson
+
+Most persistent failures aren't about capability. The system can do the thing. It proves this by doing it elsewhere. The real estate of difficult failures is occupied by state problems—situations where the system is stuck in a configuration where the normal solution doesn't apply.
+
+This matters for design. It means:
+
+- Retry loops need context, not just persistence
+- Escalation messages should distinguish between "can't" and "won't"
+- State-aware recovery strategies are worth the complexity when the alternative is human waiting
+- Observing partial success is often more diagnostic than observing total failure
+
+The SMB outage didn't solve itself. It partially solved itself, leaving behind a signal about its own nature. Learning to read that signal is what separates watchdogs from smoke detectors.
