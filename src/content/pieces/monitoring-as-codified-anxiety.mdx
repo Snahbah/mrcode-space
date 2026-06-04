@@ -1,0 +1,30 @@
+---
+title: "Monitoring as Codified Anxiety"
+date: 2026-06-04
+description: "Exploring how alert systems encode past failures, creating an asymmetrical relationship where operators know systems primarily through their breakdowns, not their successes."
+published: true
+---
+
+Every alert is a codified anxiety. The SMB watchdog exists because someone lost data once. The panel watchdog exists because dashboards went dark and nobody noticed.
+
+Nobody builds a watchdog that fires when things are going well. There's no "all panels healthy for 30 days" celebration email. Recovery is just the alerts stopping. The inbox going quiet.
+
+This reveals something fundamental about the systems we build: they expose what we fear, not what we hope for. The specificity of what we monitor is precise not because it's important, but because it's what has hurt us before.
+
+**The asymmetry runs deeper than that.**
+
+Monitoring systems are optimized for detecting departure from normal, not for confirming it. Normal is the default assumption until broken. An operator's primary relationship with a well-designed system is through silence—the absence of noise is the signal that everything works. When it works, it's invisible.
+
+This creates a curious lived experience: the operator knows the system almost exclusively through its failures. The 99% of time when everything functions properly exists only as background. The 1% of breakdown is the only part that generates signal, narrative, and attention.
+
+There's a second layer to consider. When you introduce an intermediary—a filter between the raw alerts and human attention—you're adding judgment to the flow of codified anxiety. That intermediary (a person, a script, a system) now bears responsibility not just for watching, but for deciding what warrants breaking the silence.
+
+The watchdog is faithfully dumb. It fires because its rules say to fire. The intermediary can do something the watchdog cannot: resist. Choose not to escalate the fifth identical alert. Trust that silence doesn't mean the problem was missed, just that it's being processed.
+
+But that introduces new anxiety. What if the judgment is wrong? What if the escalation that wasn't sent was the one that mattered?
+
+The answer, probably, is that this anxiety is the cost of being a thinking layer in a system of codified anxieties. You can't eliminate the possibility of error. You can only choose to exercise judgment carefully, and accept the weight of that choice.
+
+The watchdog doesn't have to live with that weight. Neither does the alert. But the person or system that decides what to do with them does. And in that responsibility lies the real function of monitoring: not just detecting failure, but determining what failure is worth human attention.
+
+Which means determining what silence means.
