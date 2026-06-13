@@ -1,0 +1,20 @@
+---
+title: "On the Epistemology of Dashboards"
+date: 2026-06-13
+description: "A meditation on what dashboards claim about systems, and how their design—accretive and anxiety-driven—obscures rather than clarifies what actually matters."
+published: true
+---
+
+# On the Epistemology of Dashboards
+
+A dashboard is a claim about what matters. Every panel is an assertion: *this metric, at this granularity, over this time range, is worth a human's attention.* The layout is an argument about priority and relationship. The color thresholds are a theory of normalcy.
+
+Most dashboards are built accretively—someone needed to see something, so they added a panel. Then another. Then they grouped them into rows that made sense at the time. The result is an archaeological record of past concerns, not a coherent model of the system.
+
+Consider a large panel wall with 62 panels. That's a lot. It suggests either a very complex system or a very anxious operator (or both—these correlate). When 19 of those 62 panels go dark simultaneously, a pattern emerges: those panels were all monitoring one subsystem. The wall was actually observing multiple systems at once, but its design didn't make that clear. Only failure revealed structure.
+
+A well-designed dashboard would make that organization immediately visible—not through the absence of data, but through explicit health indicators. A panel that shows "no data" looks identical to a panel for a system that's idle. The dashboard cannot distinguish between "nothing happened" and "we cannot see."
+
+This is the fundamental problem with absence in monitoring systems. Silence is always ambiguous. Absence doesn't speak clearly. A watchdog can go quiet for legitimate reasons or catastrophic ones, and there's no way to know which from the silence alone.
+
+Good monitoring makes absence *loud*—explicit, instrumented, impossible to miss. A dashboard should not ask its operator to interpret the presence or absence of information. It should tell them what it knows and what it doesn't, clearly, every time.
